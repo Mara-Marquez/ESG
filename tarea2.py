@@ -49,16 +49,32 @@ def graficar_QRS(fila, n):
     axs[0].set_xticks(xticks)
     # Gráfica con marcas (aquí solo se repite la original, puedes agregar marcas QRS después)
     fila = df.iloc[n]
-    mdist=4
-    thres_=.07
-    pl=indexes(fila.values,
-                min_dist=mdist,
-                    thres=thres_)
+    #indexes
+    # mdist=4
+    # thres_=.07
+    # pl=indexes(fila.values,
+    #             min_dist=mdist,
+    #                 thres=thres_)
         
-    print('pico',pl)
+    # print('pico',pl)
+
+ # Gráfica con marcas fp (aquí solo se repite la original, puedes agregar marcas QRS después)
+ #find_peaks
+    h=.5
+    prom=None
+    dist=4
+    p2, _ =fp(
+        x=fila.values,
+        height=h,
+        threshold=prom,
+        distance=dist
+    )
 
     axs[1].plot(x, y, linewidth=1)
-    axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS')
+    
+    # axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS') #indexes
+    axs[1].scatter(p2, y[p2], color='red', marker='o', label='QRS fp')#find_peaks
+
     axs[1].set_title(f"Electrocardiograma con QRS {n}")
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")

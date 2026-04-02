@@ -1,3 +1,4 @@
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,45 +18,18 @@ df = pd.read_csv(ruta)
 leng = len(df)
 print(f"Archivo cargado con {leng} filas (índices válidos: 0 a {leng-1}).")
 
-while True:
-    print("Escribe el número de fila a graficar o 's' para salir.")
-    variable = input("> ")
-    if variable.lower() == "s":
-        print("Saliendo...")
-        break
-    # Validción: entero
-    try:
-        numero = int(variable)
-    except ValueError:
-        print("No es un número entero. Intenta de nuevo.")
-        continue
-    # Validación: rango (¡hazla ANTES de acceder a df.iloc[numero]!)
-    if numero < 0 or numero >= leng:
-        print(f"El número debe estar en el rango 0 a {leng-1}.")
-        continue
-      #extraccion de la fila seleccionada permite acceder a filas por su posición 
-    fila=df.iloc[numero]
-    n=numero
-      # Nos quedamos solo con valores numericos en la fila y otros en NAN y se eliminan
+def graficar_fila(fila, n):
     fila_num = pd.to_numeric(fila, errors='coerce').dropna()
-#si esta vacia
     if fila_num.empty:
-        print("La fila no tiene valores numéricos para graficar.")
-        continue
-    #  crea un arreglo de 0 hasta la cantidad de elementos en la fila -1 
-    #x indice de cada valor
-# y los valores numericos
+        print(f"La fila {n} no tiene valores numéricos para graficar.")
+        return
     x = np.arange(len(fila_num))
     y = fila_num.values
-#tamaño de la ventana 
     plt.figure(figsize=(10, 4))
-    #dibuja con los indices x y valores y  marker o es para el punto y el ancho de linea
     plt.plot(x, y, marker="o", linewidth=1)
-
     plt.title(f"Electrocardiograma de la fila {n}")
     plt.xlabel("x")
     plt.ylabel("y")
-     #activa cuadricula 30% opacidad
     plt.grid(True, alpha=0.3)
     step = 20
     xticks = np.arange(0, len(x), step)
@@ -64,6 +38,44 @@ while True:
     plt.xticks(xticks, rotation=0)
     plt.tight_layout()
     plt.show()
+
+def mostrar_todas_las_filas():
+    print(leng)
+    for n in range(leng):
+        print(f"Mostrando fila {n}...")
+        fila = df.iloc[n]
+        graficar_fila(fila, n)
+        # Espera a que el usuario cierre la ventana para continuar
+
+
+
+# --- Menú principal ---
+while True:
+    print("\nOpciones:")
+    print("1. Graficar una fila específica")
+    print("2. Mostrar todas las filas una tras otra")
+    print("s. Salir")
+    opcion = input("> ")
+    if opcion == "1":
+        print("Escribe el número de fila a graficar:")
+        variable = input("> ")
+        try:
+            numero = int(variable)
+        except ValueError:
+            print("No es un número entero. Intenta de nuevo.")
+            continue
+        if numero < 0 or numero >= leng:
+            print(f"El número debe estar en el rango 0 a {leng-1}.")
+            continue
+        fila = df.iloc[numero]
+        graficar_fila(fila, numero)
+    elif opcion == "2":
+        mostrar_todas_las_filas()
+    elif opcion.lower() == "s":
+        print("Saliendo...")
+        break
+    else:
+        print("Opción no válida. Intenta de nuevo.")
 
 #    Debe identificar los segmentos QRS del dataset
 #  MITBH. Puede descartar algunos ECG,

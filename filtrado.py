@@ -84,9 +84,10 @@ def graficar_QRS(fila, n):
     
     for idx in p2:
         axs[1].text(idx + 2, y[idx], 'R', fontsize=10, color='red', va='center')
-    # Punto más bajo después del más alto
-   
-   
+    # if len(p2) > 0:
+    #     idx_max = p2[np.argmax(y[p2])]
+    #     axs[1].text(idx_max + 2, y[idx_max], 'Punto más alto', fontsize=10, color='blue', va='center')
+
     axs[1].set_title(f"Electrocardiograma con QRS {n}")
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")

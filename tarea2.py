@@ -27,6 +27,7 @@ def graficar_fila(fila, n):
     plt.show()
 
 def graficar_QRS(fila, n):
+    global contadorFilas
     fila_num = pd.to_numeric(fila, errors='coerce').dropna()
     if fila_num.empty:
         print(f"La fila {n} no tiene valores numéricos para graficar.")
@@ -60,9 +61,9 @@ def graficar_QRS(fila, n):
 
  # Gráfica con marcas fp (aquí solo se repite la original, puedes agregar marcas QRS después)
  #find_peaks
-    h=.5
-    prom=None
-    dist=4
+    h=.8
+    prom=.03
+    dist=2
     p2, _ =fp(
         x=fila.values,
         height=h,
@@ -74,6 +75,12 @@ def graficar_QRS(fila, n):
     
     # axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS') #indexes
     axs[1].scatter(p2, y[p2], color='red', marker='o', label='QRS fp')#find_peaks
+    
+    for idx in p2:
+        axs[1].text(idx + 2, y[idx], 'R', fontsize=10, color='red', va='center')
+    # if len(p2) > 0:
+    #     idx_max = p2[np.argmax(y[p2])]
+    #     axs[1].text(idx_max + 2, y[idx_max], 'Punto más alto', fontsize=10, color='blue', va='center')
 
     axs[1].set_title(f"Electrocardiograma con QRS {n}")
     axs[1].set_xlabel("x")
@@ -81,15 +88,20 @@ def graficar_QRS(fila, n):
     axs[1].grid(True, alpha=0.3)
     axs[1].set_xticks(xticks)
     plt.tight_layout(rect=[0, 0.12, 1, 1])  # deja espacio abajo
+    contadorFilas += 1
     # --- Labels debajo ---
     parametros = {
-        "QRS detectados": "-",
+        "QRS detectados": contadorFilas,
         "% acierto": "-",
         "Descartados": "-"
     }
     texto = "    ".join([f"{k}: {v}" for k, v in parametros.items()])
     fig.text(0.5, 0.04, texto, ha='center', fontsize=12, bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray'))
+    
     plt.show()
+    
+    
+    
 
 def mostrar_todas_las_filas():
     print(leng)
@@ -118,6 +130,13 @@ df = pd.read_csv(ruta)
 leng = len(df)
 print(f"Archivo cargado con {leng} filas (índices válidos: 0 a {leng-1}).")
 
+
+global contadorFilas 
+
+contadorFilas =0
+contadorR=0
+contadorQ=0
+contadorS=0
 
 #menu de opciones
 while True:

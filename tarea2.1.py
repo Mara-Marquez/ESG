@@ -1,21 +1,10 @@
-#imports
+#imports sin filtrado 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import neurokit2 as nk
 from scipy.signal import find_peaks as fp
 from peakutils import indexes
 
-from scipy.signal import butter, lfilter
-
-def bandpass(signal,lowcut, highcut, fs, order=2):
-    nyq = 0.5 * fs
-    #nyquist para q no se distorcione
-    low = lowcut / nyq
-    high = highcut / nyq#noemaliza el valor q tendra 
-    b, a =butter(order,[low,high],btype ="band")
-    y=lfilter(b,a,signal)
-    return y
 def Error(medido, real):
     if real == 0:
         return 0
@@ -50,12 +39,10 @@ def graficar_QRS(fila, n):
         print(f"La fila {n} no tiene valores numéricos para graficar.")
         return
     x = np.arange(len(fila_num))
-   
     y = fila_num.values
 
     
     fig, axs = plt.subplots(1, 2, figsize=(14, 5))
- 
     # Gráfica original
     axs[0].plot(x, y, linewidth=1)
     axs[0].set_title(f"Electrocardiograma original fila {n}")
@@ -69,13 +56,6 @@ def graficar_QRS(fila, n):
     axs[0].set_xticks(xticks)
     # Gráfica con marcas (aquí solo se repite la original, puedes agregar marcas QRS después)
     fila = df.iloc[n]
-       #filtro
-    lowcut=0.1
-    highcut=60.0
-    sampling=1000
-
-    senal_filtrada=bandpass(fila.values,lowcut,highcut,sampling)
-
     #indexes
     # mdist=4
     # thres_=.07
@@ -87,31 +67,27 @@ def graficar_QRS(fila, n):
 
  # Gráfica con marcas fp (aquí solo se repite la original, puedes agregar marcas QRS después)
  #find_peaks
-    h=.4
+    h=.8
     prom=.03
     dist=2
     p2, _ =fp(
-        x=senal_filtrada,
+        x=fila.values,
         height=h,
         threshold=prom,
         distance=dist
     )
 
-
-    axs[1].plot(x, senal_filtrada, linewidth=1)
+    axs[1].plot(x, y, linewidth=1)
+    
     # axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS') #indexes
-    axs[1].scatter(p2, senal_filtrada[p2], color='red', marker='o', label='QRS fp')#find_peaks
+    axs[1].scatter(p2, y[p2], color='red', marker='o', label='QRS fp')#find_peaks
+    
     for idx in p2:
-        axs[1].text(idx + 2, senal_filtrada[idx], 'R', fontsize=10, color='red', va='center')
-
-    # Marcar el punto más alto (máximo absoluto) de la señal filtrada
-    max_idx = np.argmax(senal_filtrada)
-    axs[1].scatter([max_idx], [senal_filtrada[max_idx]], color='red', marker='o', label='R')
-    axs[1].text(max_idx, senal_filtrada[max_idx], 'R', fontsize=10, color='red', va='bottom')
-
-    # --- NEUROKIT2: Delineación QRS (Q y S) ---
-
-    axs[1].set_title(f"Electrocardiograma con QRS  y filtro {n}")
+        axs[1].text(idx + 2, y[idx], 'R', fontsize=10, color='red', va='center')
+    # Punto más bajo después del más alto
+   
+   
+    axs[1].set_title(f"Electrocardiograma con QRS {n}")
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")
     axs[1].grid(True, alpha=0.3)
@@ -126,6 +102,7 @@ def graficar_QRS(fila, n):
     }
     texto = "    ".join([f"{k}: {v}" for k, v in parametros.items()])
     fig.text(0.5, 0.04, texto, ha='center', fontsize=12, bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray'))
+    
     plt.show()
     
     

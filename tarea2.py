@@ -1,3 +1,5 @@
+#trabajando en QSR
+
 #imports
 import matplotlib.pyplot as plt
 import numpy as np
@@ -69,21 +71,15 @@ def graficar_QRS(fila, n):
     axs[0].set_xticks(xticks)
     # Gráfica con marcas (aquí solo se repite la original, puedes agregar marcas QRS después)
     fila = df.iloc[n]
+
+
+
        #filtro
     lowcut=0.1
     highcut=60.0
     sampling=1000
 
     senal_filtrada=bandpass(fila.values,lowcut,highcut,sampling)
-
-    #indexes
-    # mdist=4
-    # thres_=.07
-    # pl=indexes(fila.values,
-    #             min_dist=mdist,
-    #                 thres=thres_)
-        
-    # print('pico',pl)
 
  # Gráfica con marcas fp (aquí solo se repite la original, puedes agregar marcas QRS después)
  #find_peaks
@@ -96,21 +92,56 @@ def graficar_QRS(fila, n):
         threshold=prom,
         distance=dist
     )
+    #QS
+    q_points = []
+    s_points = []
+    window = int(0.04 *len(senal_filtrada))  # ventana de 40 ms para buscar Q y S alrededor de R
 
 
-    axs[1].plot(x, senal_filtrada, linewidth=1)
+    for r in p2:
+        # Q: mínimo antes del R
+        q_region = senal_filtrada[max(0, r-window):r]
+        if len(q_region) > 0:
+            q_idx = np.argmin(q_region) + max(0, r-window)
+            q_points.append(q_idx)
+        # S: mínimo después del R
+        s_region = senal_filtrada[r:r+window]
+        if len(s_region) > 0:
+            s_idx = np.argmin(s_region) + r
+            s_points.append(s_idx)
+    print(f"Coordenadas R: {list(p2)}")
+    print(f"Coordenadas Q: {q_points}")
+    print(f"Coordenadas S: {s_points}")
+
+    # Imprimir coordenadas antes de graficar
+   
+    
     # axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS') #indexes
-    axs[1].scatter(p2, senal_filtrada[p2], color='red', marker='o', label='QRS fp')#find_peaks
-    for idx in p2:
-        axs[1].text(idx + 2, senal_filtrada[idx], 'R', fontsize=10, color='red', va='center')
+    # axs[1].scatter(p2, senal_filtrada[p2], color='red', marker='o', label='QRS fp')#find_peaks
+    # for idx in p2:
+    #     axs[1].text(idx + 2, senal_filtrada[idx], 'R', fontsize=10, color='red', va='center')
 
     # Marcar el punto más alto (máximo absoluto) de la señal filtrada
     max_idx = np.argmax(senal_filtrada)
     axs[1].scatter([max_idx], [senal_filtrada[max_idx]], color='red', marker='o', label='R')
     axs[1].text(max_idx, senal_filtrada[max_idx], 'R', fontsize=10, color='red', va='bottom')
 
-    # --- NEUROKIT2: Delineación QRS (Q y S) ---
 
+    # Graficar puntos Q en verde
+    if q_points:
+        axs[1].scatter(q_points, senal_filtrada[q_points], color='green', marker='x', s=80, label='Q')
+        for idx in q_points:
+            axs[1].text(idx, senal_filtrada[idx], 'Q', fontsize=10, color='green', va='bottom')
+    # Graficar puntos S en azul
+    if s_points:
+        axs[1].scatter(s_points, senal_filtrada[s_points], color='blue', marker='x', s=80, label='S')
+        for idx in s_points:
+            axs[1].text(idx, senal_filtrada[idx], 'S', fontsize=10, color='blue', va='bottom')
+
+
+
+    # --- plot de 2 grafica con QRS y filtro ---
+    axs[1].plot(x, senal_filtrada, linewidth=1)
     axs[1].set_title(f"Electrocardiograma con QRS  y filtro {n}")
     axs[1].set_xlabel("x")
     axs[1].set_ylabel("y")

@@ -1,3 +1,5 @@
+#tratar de detectar ondas QRS
+
 #imports
 import matplotlib.pyplot as plt
 import numpy as np
@@ -100,38 +102,16 @@ def graficar_QRS(fila, n):
 
     axs[1].plot(x, senal_filtrada, linewidth=1)
     # axs[1].scatter(pl, y[pl], color='red', marker='o', label='QRS') #indexes
-    axs[1].scatter(p2, senal_filtrada[p2], color='red', marker='o', label='QRS fp')#find_peaks
-    for idx in p2:
-        axs[1].text(idx + 2, senal_filtrada[idx], 'R', fontsize=10, color='red', va='center')
+    # axs[1].scatter(p2, senal_filtrada[p2], color='red', marker='o', label='QRS fp')#find_peaks
+    # for idx in p2:
+    #     axs[1].text(idx + 2, senal_filtrada[idx], 'R', fontsize=10, color='red', va='center')
 
-    # Marcar el punto más alto (máximo absoluto) de la señal filtrada
+    # Marcar el punto más alto R de la señal filtrada
     max_idx = np.argmax(senal_filtrada)
     axs[1].scatter([max_idx], [senal_filtrada[max_idx]], color='red', marker='o', label='R')
     axs[1].text(max_idx, senal_filtrada[max_idx], 'R', fontsize=10, color='red', va='bottom')
 
-    # --- NEUROKIT2: Delineación QRS (Q y S) ---
-    ecg_signal = np.array(senal_filtrada)
-    if len(ecg_signal) < 100:
-        print(f"Fila {n}: señal demasiado corta para neurokit2 (longitud {len(ecg_signal)}). Se requieren al menos 200 muestras.")
-    else:
-        try:
-            # Detectar picos R con neurokit2
-            rpeaks = nk.ecg_peaks(ecg_signal, sampling_rate=len(x))[1]
-            # Delinear ondas QRS
-            _, waves_peak = nk.ecg_delineate(ecg_signal, rpeaks, sampling_rate=len(x), method="peak")
-            # Graficar Q y S si existen
-            if 'ECG_Q_Peaks' in waves_peak and waves_peak['ECG_Q_Peaks'] is not None:
-                q_peaks = waves_peak['ECG_Q_Peaks']
-                axs[1].scatter(q_peaks, ecg_signal[q_peaks], color='green', marker='x', s=80, label='Q')
-                for idx in q_peaks:
-                    axs[1].text(idx, ecg_signal[idx], 'Q', fontsize=10, color='green', va='bottom')
-            if 'ECG_S_Peaks' in waves_peak and waves_peak['ECG_S_Peaks'] is not None:
-                s_peaks = waves_peak['ECG_S_Peaks']
-                axs[1].scatter(s_peaks, ecg_signal[s_peaks], color='blue', marker='x', s=80, label='S')
-                for idx in s_peaks:
-                    axs[1].text(idx, ecg_signal[idx], 'S', fontsize=10, color='blue', va='bottom')
-        except Exception as e:
-            print(f"Fila {n}: error usando neurokit2 para Q y S: {e}")
+
 
     axs[1].set_title(f"Electrocardiograma con QRS  y filtro {n}")
     axs[1].set_xlabel("x")

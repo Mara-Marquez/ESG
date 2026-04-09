@@ -1,3 +1,4 @@
+
 #masomenos falta q solo salga 1 punto rojo
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +12,6 @@ def Error(medido, real):
     if real == 0:
         return 0
     return abs(medido - real) / real * 100
-
 
 def graficar_fila(fila, n):
     fila_num = pd.to_numeric(fila, errors='coerce').dropna()
@@ -34,8 +34,13 @@ def graficar_fila(fila, n):
     plt.tight_layout()
     plt.show()
 
-def graficar_QRS(fila, n):
+def graficar_QRS(fila, n  ):
     global contadorFilas
+    global contadorR
+    global contadorQ
+    global contadorS
+    global aciertos
+    global descartados
     fila_num = pd.to_numeric(fila, errors='coerce').dropna()
     if fila_num.empty:
         print(f"La fila {n} no tiene valores numéricos para graficar.")
@@ -58,6 +63,7 @@ def graficar_QRS(fila, n):
     axs[0].set_xticks(xticks)
     # Gráfica con marcas (aquí solo se repite la original, puedes agregar marcas QRS después)
     fila = df.iloc[n]
+    
     #indexes
     # mdist=4
     # thres_=.07
@@ -70,8 +76,8 @@ def graficar_QRS(fila, n):
  # Gráfica con marcas fp (aquí solo se repite la original, puedes agregar marcas QRS después)
  #find_peaks
     h=.8
-    prom=.03
-    dist=2
+    prom=None
+    dist=1#2
     p2, _ =fp(
         x=fila.values,
         height=h,
@@ -98,12 +104,16 @@ def graficar_QRS(fila, n):
         q_region = fila.values[max(0, r-window):r]
         if len(q_region) > 0:
             q_idx = np.argmin(q_region) + max(0, r-window)
-            q_points.append(q_idx)
+            # Solo agregar si la diferencia de altura es al menos 0.3
+            if abs(fila.values[r] - fila.values[q_idx]) >= 0.3:
+                q_points.append(q_idx)
         # S: mínimo después del R
         s_region = fila.values[r:r+window]
         if len(s_region) > 0:
             s_idx = np.argmin(s_region) + r
-            s_points.append(s_idx)
+            # Solo agregar si la diferencia de altura es al menos 0.3
+            if abs(fila.values[r] - fila.values[s_idx]) >= 0.3:
+                s_points.append(s_idx)
     print(f"Coordenadas R: {list(p2)}")
     print(f"Coordenadas Q: {q_points}")
     print(f"Coordenadas S: {s_points}")
@@ -137,33 +147,99 @@ def graficar_QRS(fila, n):
     axs[1].set_xticks(xticks)
     plt.tight_layout(rect=[0, 0.12, 1, 1])  # deja espacio abajo
     contadorFilas += 1
+    if len(p2) > 0:
+        contadorR += 1
+    if(len(s_points) > 0):
+      contadorS += 1
+    if(len(q_points) > 0):
+      contadorQ += 1
+    if len(p2) > 0 and len(q_points) > 0 and len(s_points) > 0:
+        aciertos += 1
+    else:
+        descartados += 1
     # --- Labels debajo ---
     parametros = {
         "QRS detectados": contadorFilas,
-        "% acierto": "-",
-        "Descartados": "-"
+        "R detectados": contadorR,
+        "Q detectados": contadorQ,
+        "S detectados": contadorS,
+        "% acierto": f"{(aciertos/contadorFilas)*100:.2f}%" if contadorFilas > 0 else "-",
+        "Descartados": f"{descartados}"
     }
     texto = "    ".join([f"{k}: {v}" for k, v in parametros.items()])
     fig.text(0.5, 0.04, texto, ha='center', fontsize=12, bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray'))
 
     plt.show()
 
-
-
+def proceso_solo_contadores():
+    global contadorFilas, contadorR, contadorQ, contadorS, aciertos, descartados
+    # Reiniciar contadores
+    contadorFilas = 0
+    contadorR = 0
+    contadorQ = 0
+    contadorS = 0
+    aciertos = 0
+    descartados = 0
+    for n in range(leng):
+        fila = df.iloc[n]
+        fila_num = pd.to_numeric(fila, errors='coerce').dropna()
+        if fila_num.empty:
+            continue
+        y = fila_num.values
+        h = .8
+        prom = None
+        dist = 1
+        p2, _ = fp(
+            x=y,
+            height=h,
+            threshold=prom,
+            distance=dist
+        )
+        q_points = []
+        s_points = []
+        window = int(0.06 * len(y))
+        for r in p2:
+            q_region = y[max(0, r-window):r]
+            if len(q_region) > 0:
+                q_idx = np.argmin(q_region) + max(0, r-window)
+                if abs(y[r] - y[q_idx]) >= 0.3:
+                    q_points.append(q_idx)
+            s_region = y[r:r+window]
+            if len(s_region) > 0:
+                s_idx = np.argmin(s_region) + r
+                if abs(y[r] - y[s_idx]) >= 0.3:
+                    s_points.append(s_idx)
+        contadorFilas += 1
+        if len(p2) > 0:
+            contadorR += 1
+        if len(s_points) > 0:
+            contadorS += 1
+        if len(q_points) > 0:
+            contadorQ += 1
+        if len(p2) > 0 and len(q_points) > 0 and len(s_points) > 0:
+            aciertos += 1
+        else:
+            descartados += 1
+    print("\nResumen del procesamiento sin visualización:")
+    print(f"QRS detectados: {contadorFilas}")
+    print(f"R detectados: {contadorR}")
+    print(f"Q detectados: {contadorQ}")
+    print(f"S detectados: {contadorS}")
+    print(f"acierto: {aciertos}")
+    print(f"% acierto: {(aciertos/contadorFilas)*100:.2f}%" if contadorFilas > 0 else "% acierto: -")
+    print(f"Descartados: {descartados}")
 
 def mostrar_todas_las_filas():
     print(leng)
-    for n in range(leng):
+    for n in range( leng):
         print(f"Mostrando fila {n}...")
         fila = df.iloc[n]
         graficar_QRS(fila, n)
     pass
 
 
-def proceso_sin_visualizacion():
-    # proceso de detección de QRS sin mostrar gráficos
-    # calcular porcentaje de aciertos y número de descartados
-    pass
+
+
 #ruta y si puede abrir el archivo
 #ruta = r'C:/Users/Usuario/Downloads/train1000 (2).csv'   # Ajusta la ruta según tu archivo
 #drive.mount('/content/drive')
@@ -184,11 +260,18 @@ print(f"Archivo cargado con {leng} filas (índices válidos: 0 a {leng-1}).")
 
 
 global contadorFilas
+global contadorR
+global contadorQ
+global contadorS
+global aciertos
+global descartados
 
 contadorFilas =0
 contadorR=0
 contadorQ=0
 contadorS=0
+aciertos=0
+descartados=0
 
 #menu de opciones
 while True:
@@ -236,6 +319,7 @@ while True:
     elif opcion == "3":
         print("3. Proceso sin visualización y estadísticas")
         # llamar proceso_sin_visualizacion()
+        proceso_solo_contadores()
 
 
         #hacerlo en froma automatica de todos los archivos y que se cierre con un enter

@@ -1,3 +1,4 @@
+#otros puntos mostrados en la grafica
 
 #masomenos falta q solo salga 1 punto rojo
 import matplotlib.pyplot as plt
@@ -6,12 +7,6 @@ import pandas as pd
 from scipy.signal import find_peaks as fp
 #from google.colab import drive
 from peakutils import indexes
-PORC_MIN = 0.60 
-
-
-def cumple_60_abajo(valor, r_val):
-  
-    return (r_val - valor) / abs(r_val) >= PORC_MIN
 
 
 def Error(medido, real):
@@ -120,59 +115,9 @@ def graficar_QRS(fila, n  ):
             # Solo agregar si la diferencia de altura es al menos 0.3
             if abs(fila.values[r] - fila.values[s_idx]) >= 0.3:
                 s_points.append(s_idx)
-            
     print(f"Coordenadas R: {list(p2)}")
     print(f"Coordenadas Q: {q_points}")
     print(f"Coordenadas S: {s_points}")
-
- 
-    Fs = 187  # frecuencia de muestreo (ajusta si es distinto)
-
-    p_points = []
-    t_points = []
-
-    for r in p2:
-
-        # -------- P (en el intervalo PR) --------
-        p_start = max(0, r - int(0.20 * Fs))
-        p_end   = max(0, r - int(0.08 * Fs))
-
-        p_region = y[p_start:p_end]
-        if len(p_region) > 0:
-            p_idx = np.argmax(p_region) + p_start
-            if abs(y[p_idx]) > 0.1:   # umbral antiruido
-                p_points.append(p_idx)
-
-        # -------- T (en el intervalo QT) --------
-        t_start = min(len(y), r + int(0.12 * Fs))
-        t_end   = min(len(y), r + int(0.44 * Fs))
-
-        t_region = y[t_start:t_end]
-        if len(t_region) > 0:
-            t_idx = np.argmax(t_region) + t_start
-            if abs(y[t_idx]) > 0.1:
-                t_points.append(t_idx)
-
-        
-        axs[1].axvline(p_start, color='purple', linestyle='--', alpha=0.5)
-        axs[1].axvline(p_end,   color='purple', linestyle='--', alpha=0.5)
-        
-        axs[1].axvspan(
-                    p_start,
-                    p_end,
-                    color='purple',
-                    alpha=0.12
-                )
-
-        # Ventana T (QT)
-        axs[1].axvline(t_start, color='orange', linestyle='--', alpha=0.5)
-        axs[1].axvline(t_end,   color='orange', linestyle='--', alpha=0.5)
-        axs[1].axvspan(
-                    t_start,
-                    t_end,
-                    color='orange',
-                    alpha=0.12
-                )
 
 
     # Marcar el punto más alto (máximo absoluto) de la señal sin filtrar como R
@@ -191,19 +136,6 @@ def graficar_QRS(fila, n  ):
         axs[1].scatter(s_points, y[s_points], color='blue', marker='x', s=80, label='S')
         for idx in s_points:
             axs[1].text(idx, y[idx], 'S', fontsize=10, color='blue', va='bottom')
-    
-    
-    #P (morado)
-    if p_points:
-        axs[1].scatter(p_points, y[p_points], color='purple', s=70, label='P')
-        for i in p_points:
-            axs[1].text(i, y[i], 'P', color='purple', fontsize=10)
-
-    # T (naranja)
-    if t_points:
-        axs[1].scatter(t_points, y[t_points], color='orange', s=70, label='T')
-        for i in t_points:
-            axs[1].text(i, y[i], 'T', color='orange', fontsize=10)
 
 
 
@@ -314,7 +246,7 @@ def mostrar_todas_las_filas():
 #drive.mount('/content/drive')
 
 #ruta = '/content/drive/MyDrive/8 SEMESTRE/Simulacion de sistemas/train1000.csv'
-ruta = r'C:/Users/v84394/Downloads/muestras tipo 1.csv' 
+ruta = r'C:/Users/v84394/Downloads/train1000.csv' 
 df = pd.read_csv(ruta)
 # Verificar que el archivo se puede abrir
 try:

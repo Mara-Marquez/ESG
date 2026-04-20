@@ -137,6 +137,41 @@ def dibujar_eje_y():
         screen.blit(txt, (ECG_X - 45, y_pos - 8))
 
 
+def dibujar_valvulas(color, x, y, estatus):
+    if color == 'azul':
+        door_color = (0, 100, 255)
+    elif color == 'rojo':
+        door_color = (199, 39, 33)
+
+    door_width = 2
+
+    # Longitudes
+    largo = 50
+    separacion = 10
+
+    if estatus == 'cerrada':
+        # Líneas horizontales
+        x1 = x
+        x2 = x + largo
+        x3 = x2 + separacion
+        x4 = x3 + largo
+
+        pygame.draw.line(screen, door_color, (x1, y), (x2, y), door_width)
+        pygame.draw.line(screen, door_color, (x3, y), (x4, y), door_width)
+
+    elif estatus == 'abierta':
+        # Líneas verticales
+        y1 = y
+        x1=  x
+        y2 = y - largo
+        x2= x+largo+largo+separacion
+        y3 = y2 + separacion
+        y4 = y3 + largo
+
+        pygame.draw.line(screen, door_color, (x1, y1), (x1, y2), door_width)
+        pygame.draw.line(screen, door_color, (x2, y1), (x2, y2), door_width)
+
+
 def dibujar_areas():
     for ini, fin in areas_P:
         x1, _ = escalar(ini, 0)
@@ -179,7 +214,7 @@ while running:
 
     # ---- GRID ----
     dibujar_panel_info()
-    
+
     dibujar_cuadricula_ecg()
     dibujar_eje_x()
     dibujar_eje_y()
@@ -191,24 +226,34 @@ while running:
 
     # ---- ECG COMPLETO ----
     pygame.draw.lines(screen, (0, 255, 0), False, ecg_points, 2)
-    
+
     VENTANA_T = (-0.20, -0.08)   # PR
     VENTANA_P = ( -0.08,  0)   # QT
 
-    
+
 
 
     # ---- QRS ----
     for r in p2:
         pygame.draw.circle(screen, (255, 0, 0), escalar(r, y[r]), 4)
-      
+
         for q in q_points:
             pygame.draw.circle(screen, (0, 0, 255), escalar(q, y[q]), 3)
         for s in s_points:
             pygame.draw.circle(screen, (0, 0, 255), escalar(s, y[s]), 3)
 
+    # ---- dibujar valvulas ---- 
+    dibujar_valvulas('rojo',1100,100,'abierta') 
+    dibujar_valvulas('azul',1300,100,'abierta')
+
+    dibujar_valvulas('azul',1100,200,'cerrada')
+    dibujar_valvulas('rojo',1300,200,'cerrada')
+    #dibujar_valvulas('azul',1200,200,abierta,cerrada)
+
+    #escribir titulo 
+
     # ---- CURSOR VERTICAL ----
- 
+
     cx, _ = escalar(cursor, y[cursor])
     pygame.draw.line(
         screen,

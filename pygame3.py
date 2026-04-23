@@ -137,17 +137,28 @@ def dibujar_eje_y():
         screen.blit(txt, (ECG_X - 45, y_pos - 8))
 
 
-def dibujar_valvulas(color, x, y, estatus):
+def dibujar_valvulas(color, estatus, nombre):
     if color == 'azul':
         door_color = (0, 100, 255)
     elif color == 'rojo':
         door_color = (199, 39, 33)
 
     door_width = 2
-
+    y=250
     # Longitudes
     largo = 25
     separacion = 10
+    if nombre =='tricuspide':
+     x=1100
+    if nombre =='pulmonar':
+        x=1200
+        
+    if nombre =='aortica':
+        x=1300
+    if nombre =='mitral':
+        x=1400
+
+
 
     if estatus == 'cerrada':
         # Líneas horizontales
@@ -199,9 +210,20 @@ def dibujar_panel_info():
 # ---------- ECG PRECALCULADO ----------
 ecg_points = [escalar(i, y[i]) for i in range(len(y))]
 
+# ---------- VALVULAS ----------
+valvula_azul = 'cerrada'
+valvula_roja = 'cerrada'
+r_activados = set()
+
 # ---------- LOOP ----------
 cursor = 0
 running = True
+estado_valvulas = {
+        'tricuspide': 'abierta',
+        'mitral': 'abierta',
+        'pulmonar': 'cerrada',
+        'aortica': 'cerrada'
+    }
 
 while running:
     clock.tick(50)
@@ -211,28 +233,21 @@ while running:
             running = False
 
     screen.fill((0, 0, 0))
+      # ----- Eventos del corazon ----- 
 
     # ---- GRID ----
     dibujar_panel_info()
-
     dibujar_cuadricula_ecg()
     dibujar_eje_x()
     dibujar_eje_y()
-
     dibujar_areas()
-
     pygame.draw.lines(screen, (0, 255, 0), False, ecg_points, 2)
-
-
     # ---- ECG COMPLETO ----
     pygame.draw.lines(screen, (0, 255, 0), False, ecg_points, 2)
 
     VENTANA_T = (-0.20, -0.08)   # PR
     VENTANA_P = ( -0.08,  0)   # QT
-
-
-
-
+    s1=0
     # ---- QRS ----
     for r in p2:
         pygame.draw.circle(screen, (255, 0, 0), escalar(r, y[r]), 4)
@@ -240,20 +255,74 @@ while running:
         for q in q_points:
             pygame.draw.circle(screen, (0, 0, 255), escalar(q, y[q]), 3)
         for s in s_points:
+            s1=s
             pygame.draw.circle(screen, (0, 0, 255), escalar(s, y[s]), 3)
-
+            
     # ---- dibujar valvulas ---- 
-    dibujar_valvulas('azul',1100,250,'abierta') 
-    dibujar_valvulas('azul',1175,250,'cerrada') 
+        
 
-    dibujar_valvulas('rojo',1300,250,'abierta') 
-    dibujar_valvulas('rojo',1400,250,'cerrada') 
+        if cursor == r  :
+            r_activados.add(r)
+            #se cierran las mitral y tricuspide
+            # dibujar_valvulas('azul','cerrada','tricuspide') 
+            # dibujar_valvulas('rojo','cerrada','mitral')
 
+            
+            estado_valvulas['tricuspide'] = 'cerrada'
+            estado_valvulas['mitral'] = 'cerrada'
+
+            #1 y 4
+        if cursor == s1 :
+            #se abre la aortica y pulmonar 
+            # dibujar_valvulas('azul','abierta','pulmonar') 
+            # dibujar_valvulas('rojo','abierta','aortica') 
+            
+            estado_valvulas['pulmonar'] = 'abierta'
+            estado_valvulas['aortica'] = 'abierta'
+
+            # 2 y 3
+        
+        cursor_en_T = False
+
+        for ini, fin in areas_T:
+            if ini <= cursor <= fin:
+                cursor_en_T = True
+                continue
+
+        if cursor_en_T:
+        #se abre mitral y tricuspide
+            #1 y 4 
+            
+            estado_valvulas['tricuspide'] = 'abierta'
+            estado_valvulas['mitral'] = 'abierta'
+            estado_valvulas['pulmonar'] = 'cerrada'
+            estado_valvulas['aortica'] = 'cerrada'
+
+    
+    dibujar_valvulas('azul', estado_valvulas['tricuspide'], 'tricuspide')
 
  
-    #dibujar_valvulas('azul',1200,200,abierta,cerrada)
+    dibujar_valvulas('rojo', estado_valvulas['mitral'], 'mitral')
 
-    #escribir titulo 
+     
+    dibujar_valvulas('azul', estado_valvulas['pulmonar'], 'pulmonar')
+
+    
+    dibujar_valvulas('rojo', estado_valvulas['aortica'], 'aortica')
+
+    pygame.draw.rect(screen, (15, 15, 15), (1050, 360, 450, 50))
+
+    texto_tricuspide = font.render("Tricúspide", True, (255, 255, 255))
+    texto_pulmonar   = font.render("Pulmonar",   True, (255, 255, 255))
+    texto_aortica    = font.render("Aórtica",    True, (255, 255, 255))
+    texto_mitral     = font.render("Mitral",     True, (255, 255, 255))
+
+
+    screen.blit(texto_tricuspide, (1085, 370))
+    screen.blit(texto_pulmonar,   (1185, 370))
+    screen.blit(texto_aortica,    (1285, 370))
+    screen.blit(texto_mitral,     (1385, 370))
+    
 
     # ---- CURSOR VERTICAL ----
 
@@ -273,6 +342,11 @@ while running:
     )
     screen.blit(texto, (700, 20))
 
+   
+    
+
+
+    
     cursor += 1
     if cursor >= len(y):
         cursor = 0
